@@ -1,10 +1,17 @@
 package com.example.attackaura;
 
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -13,13 +20,41 @@ public class AttackAuraHandler {
     private static final double RADIUS = 5.0;
     private static final int    DELAY  = 10;
 
+    private static boolean enabled = false;
     private int tick = 0;
+
+    public static KeyMapping toggleKey;
+
+    public static void registerKey(FMLClientSetupEvent event) {
+        toggleKey = new KeyMapping(
+            "key.attackaura.toggle",
+            GLFW.GLFW_KEY_R,
+            "key.categories.attackaura"
+        );
+        ClientRegistry.registerKeyBinding(toggleKey);
+    }
+
+    @SubscribeEvent
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
+        if (toggleKey.consumeClick()) {
+            enabled = !enabled;
+            Minecraft.getInstance().player.sendMessage(
+                new net.minecraft.util.text.StringTextComponent(
+                    enabled ? "§aАура включена" : "§cАура выключена"
+                ),
+                java.util.UUID.randomUUID()
+            );
+        }
+    }
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
+        if (!enabled) return;
+
         PlayerEntity player = event.player;
         World world = player.level;
+
         if (world.isClientSide) return;
         if (!player.isFallFlying()) return;
 
