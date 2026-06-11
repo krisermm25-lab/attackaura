@@ -1,11 +1,12 @@
 package com.example.attackaura;
 
-import net.minecraft.client.KeyMapping;
+import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -14,6 +15,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
+import java.util.UUID;
 
 public class AttackAuraHandler {
 
@@ -23,10 +25,10 @@ public class AttackAuraHandler {
     private static boolean enabled = false;
     private int tick = 0;
 
-    public static KeyMapping toggleKey;
+    public static KeyBinding toggleKey;
 
     public static void registerKey(FMLClientSetupEvent event) {
-        toggleKey = new KeyMapping(
+        toggleKey = new KeyBinding(
             "key.attackaura.toggle",
             GLFW.GLFW_KEY_R,
             "key.categories.attackaura"
@@ -36,14 +38,17 @@ public class AttackAuraHandler {
 
     @SubscribeEvent
     public void onKeyInput(InputEvent.KeyInputEvent event) {
-        if (toggleKey.consumeClick()) {
+        if (toggleKey != null && toggleKey.consumeClick()) {
             enabled = !enabled;
-            Minecraft.getInstance().player.sendMessage(
-                new net.minecraft.util.text.StringTextComponent(
-                    enabled ? "§aАура включена" : "§cАура выключена"
-                ),
-                java.util.UUID.randomUUID()
-            );
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null) {
+                mc.player.sendMessage(
+                    new StringTextComponent(
+                        enabled ? "\u00a7aАура включена" : "\u00a7cАура выключена"
+                    ),
+                    UUID.randomUUID()
+                );
+            }
         }
     }
 
